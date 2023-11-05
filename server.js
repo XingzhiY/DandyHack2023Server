@@ -8,67 +8,46 @@ const server = require('http').createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
 
-class StringList {
-    constructor() {
-      this.list = [];
-    }
-  
-    // 添加字符串到列表
-    addString(string) {
-      this.list.push(string);
-    }
-  
-    // 删除指定字符串
-    removeString(string) {
-      const index = this.list.indexOf(string);
-      if (index !== -1) {
-        this.list.splice(index, 1);
-      }
-    }
-  
-    // 获取列表中的所有字符串
-    getAllStrings() {
-      return this.list;
-    }
-  
-    // 清空列表
-    clearList() {
-      this.list = [];
-    }
-  }
 
-    // 创建一个Map，其中键是group ID，值是StringList实例
-    const groupMap = new Map();
+
+// 创建一个Map，其中键是group ID，值是StringList实例
+const groupMap = new Map();
 
 io.on('connection', (socket) => {
     console.log('connection');
 
-    socket.on('joinGroup', (name,groupid) => {
+    socket.on('joinGroup', (name, groupid) => {
         // 让客户端加入特定组
         socket.join(groupid);
-        io.to(groupid).emit('joinGroup',name+" joins group " + groupid);
+        io.to(groupid).emit('joinGroup', name + " joins group " + groupid);
     });
 
     socket.on('getList', (groupid) => {
         // 让客户端加入特定组
         const groupList = groupMap.get(groupid);
         if (groupList) {
-          io.to(groupid).emit('getList', groupList.getAllStrings());
+            io.to(groupid).emit('getList', groupList);
         } else {
-          io.to(groupid).emit('getList', []);
-        }    
+            io.to(groupid).emit('getList', []);
+        }
     });
-
+    socket.on('updateList', (groupid, list) => {
+        // console.log('message: ' + msg);
+        // io.emit('message', msg);
+        groupMap.set(groupid, list);
+        io.to(groupid).emit('updateList', "group" + groupid + "'s url list has been updated");
+        io.to(groupid).emit('getList', list);
+    });
 
     socket.on('message', (groupid, msg) => {
-        console.log('message: ' + msg);
+        // console.log('message: ' + msg);
         // io.emit('message', msg);
 
-        io.to(groupid).emit('message', "everyone" + msg+" "+groupid);
-
-
-
+        io.to(groupid).emit('message', msg);
     });
+    socket.on('disconnect', () => {
+        console.log('与客户端的连接已断开');
+      });
     socket.on('close', () => {
         console.log('close');
     });

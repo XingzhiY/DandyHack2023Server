@@ -5,15 +5,21 @@ const io = require('socket.io-client');
 const socket = io('http://localhost:3000'); // 将服务器地址替换为你的服务器地址
 
 // 监听服务器发送的消息
-socket.on('message', (msg) => {
-  console.log(`收到消息: ${msg}`);
-});
+
 
 
 // 发送消息到服务器
-socket.emit('message', 1,'Hello, server!');
+function message(id,msg){
+  socket.emit('message', id,msg);
+}
+socket.on('message', (msg) => {
+  console.log(msg);
+});
 
 // 处理断开连接事件
+function disconnect(){
+  socket.disconnect();
+}
 socket.on('disconnect', () => {
   console.log('与服务器的连接已断开');
 });
@@ -26,8 +32,17 @@ socket.on('joinGroup', (msg) => {
 });
 
 function getList(id){
-    socket.emit('getList', id);
+  socket.emit('getList', id);
 }
+socket.on('getList', (list) => {
+  console.log(list);
+});
 
-joinGroup("andy",1);
-getList(1);
+function updateList(id,list){
+  socket.emit('updateList', id,list);
+}
+socket.on("updateList", (msg) => {
+  console.log(`收到消息: ${msg}`);
+});
+
+
